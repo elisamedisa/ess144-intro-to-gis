@@ -145,8 +145,9 @@
                 'type': 'symbol',
                 'layout': {
                   'icon-image': iconName,
-                  'icon-size': 0.5,
-                  'icon-anchor': 'bottom'
+                  'icon-size': 0.35,
+                  'icon-anchor': 'bottom',
+                  'icon-allow-overlap': false
                 },
                 'source': {
                   'type': 'geojson',
@@ -172,7 +173,10 @@
                 const date = e.features[0].properties['When did this event occur? (Approximate dates or years are okay)']
                 const frequency = e.features[0].properties['If yes, approximately how many times?']
                 const describe = e.features[0].properties['Please describe what happened.']
-                
+                const person = e.features[0].properties['What is your name? (optional)']
+                const cityWork = e.features[0].properties['Did the city undertake any work or repairs after the event? If so, please describe.']
+                const legal = e.features[0].properties['Were there any legal challenges or financial settlements that resulted from this event? ']
+
                 var description = `<h3>`
                   if (address) {
                     description += address + `</h3>` + `<h4>` + `<b>`
@@ -186,7 +190,13 @@
                     description += `Has this occured more than once? ` + `</b>` + frequency + `</h4>` + `<h4>` + `<b>` 
                   }
                   if (describe) {
-                    description += `Description: ` + `</b>` + describe + `</h4>`
+                    description += `Description: ` + `</b>` + describe + `</h4>` + `<h4>` + `<b>` 
+                  }
+                  if (cityWork) {
+                    description += `City repairs? ` + `</b>` + cityWork + `</h4>` + `<h4>` + `<b>` 
+                  }
+                  if (legal) {
+                    description += `Legal cases? ` + `</b>` + legal + `</h4>` + `<h4>` + `<b>` 
                   }
                       if (photo) {  
                         description += `
