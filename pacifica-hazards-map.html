@@ -143,8 +143,7 @@
               //set popup text
               //You can adjust the values of the popup to match the headers of your CSV.
               // For example: e.features[0].properties.Name is retrieving information from the field Name in the original CSV.
-              var description = `<h3>` + e.features[0].properties.Name + `</h3>` + `<h4>` + `<b>` + 
-                  `Address: ` + `</b>` + e.features[0].properties.Address + `</h4>` + `<h4>` + `<b>` + 
+              var description = `<h3>` + e.features[0].properties.Address + `</h3>` + `<h4>` + `<b>` + 
                   `Date: ` + `</b>` + e.features[0].properties.Date + `</h4>` + `<h4>` + `<b>` +
                   `Has this occured more than once? ` + `</b>` + e.features[0].properties.Frequency + `</h4>` + `<h4>` + `<b>` + 
                   `Description: ` + `</b>` + e.features[0].properties.Description + `</h4>` + `<h4>` + `<b>` +
