@@ -36,7 +36,7 @@
     .mapboxgl-popup-content {
       font: 400 15px/22px 'Source Sans Pro', 'Helvetica Neue', Sans-serif;
       padding: 0;
-      width: 250px;
+      width: 300px;
     }
 
     .mapboxgl-popup-content-wrapper {
@@ -57,8 +57,9 @@
     .mapboxgl-popup-content h4 {
       margin: 0;
       display: block;
-      padding: 20px 3px 20px 10px;
+      padding: 10px 10px 10px 10px;
       font-weight: 400;
+      overflow-wrap: break-word;
     }
 
     .mapboxgl-container {
@@ -80,6 +81,15 @@
   <div id='map'></div>
   <script>
 
+    var hazardTypes = [
+      {iconName: 'cliff', iconPath: './icons8-cliff-100.png', hazardName: 'Coastal cliff failure'},
+      {iconName: 'fire', iconPath: './icons8-fires-100.png', hazardName: 'Fire'},
+      {iconName: 'erosion', iconPath: './icons8-landslide-100.png', hazardName: 'Erosion'},
+      {iconName: 'wave', iconPath: './icons8-ocean-wave-100.png', hazardName: 'Coastal flooding (from the ocean)'},
+      {iconName: 'landslide', iconPath: './icons8-avalanche-100.png', hazardName: 'Landslide'},
+      {iconName: 'flood', iconPath: './icons8-floods-100.png', hazardName: 'Inland flooding (from storm events)'}
+    ]
+
     var transformRequest = (url, resourceType) => {
       var isMapboxRequest =
         url.slice(8, 22) === "api.mapbox.com" ||
@@ -90,8 +100,8 @@
           : url
       };
     };
+
     //YOUR TURN: add your Mapbox token
-    
     mapboxgl.accessToken = 'pk.eyJ1IjoiZWJvbGVzIiwiYSI6ImNraDFtMG53cDAzMzYyem85Zm94cGJpMnYifQ.pFxheeS-98_kb68nMfZagQ'; //Mapbox token 
     var map = new mapboxgl.Map({
       container: 'map', // container id
@@ -101,6 +111,14 @@
       transformRequest: transformRequest
     });
 
+    // add icons
+    for (const {iconName, iconPath} of hazardTypes) {
+      map.loadImage(iconPath, (error, image) => {
+        if (error) throw error
+        map.addImage(iconName, image)
+      })
+    }
+  
     $(document).ready(function () {
       $.ajax({
         type: "GET",
@@ -111,58 +129,90 @@
       });
 
 
-
       function makeGeoJSON(csvData) {
         csv2geojson.csv2geojson(csvData, {
           latfield: 'Latitude',
           lonfield: 'Longitude',
           delimiter: ','
         }, function (err, data) {
+          console.log(data.features)
           map.on('load', function () {
 
-            //Add the the layer to the map
-            map.addLayer({
-              'id': 'csvData',
-              'type': 'circle',
-              'source': {
-                'type': 'geojson',
-                'data': data
-              },
-              'paint': {
-                'circle-radius': 5,
-                'circle-color': "purple"
-              }
-            });
+            for (const {iconName, hazardName} of hazardTypes) {
+              //Add the the layer to the map
+              map.addLayer({
+                'id': iconName,
+                'type': 'symbol',
+                'layout': {
+                  'icon-image': iconName,
+                  'icon-size': 0.5,
+                  'icon-anchor': 'bottom'
+                },
+                'source': {
+                  'type': 'geojson',
+                  'data': {
+                    type: "FeatureCollection",
+                    features: data.features.filter(feature => feature.properties['What type of hazard was this?'] == hazardName)
+                  }
+                }
+              })
 
+              // When a click event occurs on a feature in the csvData layer, open a popup at the
+              // location of the feature, with description HTML from its properties.
+              map.on('click', iconName, function (e) {
 
-            // When a click event occurs on a feature in the csvData layer, open a popup at the
-            // location of the feature, with description HTML from its properties.
-            map.on('click', 'csvData', function (e) {
-              var coordinates = e.features[0].geometry.coordinates.slice();
+                var coordinates = e.features[0].geometry.coordinates.slice();
+                //set popup text
+                //You can adjust the values of the popup to match the headers of your CSV.
+                // For example: e.features[0].properties.Name is retrieving information from the field Name in the original CSV.
+                const photo = e.features[0].properties['Please upload any photos or videos you\'d like to share from the event.']
+                const address = e.features[0].properties['Please write the address in the form " XXX Street, Pacifica CA 940XX" ']
+                const gpsLat = e.features[0].properties['Latitude']
+                const gpsLon = e.features[0].properties['Longitude']
+                const date = e.features[0].properties['When did this event occur? (Approximate dates or years are okay)']
+                const frequency = e.features[0].properties['If yes, approximately how many times?']
+                const describe = e.features[0].properties['Please describe what happened.']
 
-              //set popup text
-              //You can adjust the values of the popup to match the headers of your CSV.
-              // For example: e.features[0].properties.Name is retrieving information from the field Name in the original CSV.
-              var description = `<h3>` + e.features[0].properties.Address + `</h3>` + `<h4>` + `<b>` + 
-                  `Date: ` + `</b>` + e.features[0].properties.Date + `</h4>` + `<h4>` + `<b>` +
-                  `Has this occured more than once? ` + `</b>` + e.features[0].properties.Frequency + `</h4>` + `<h4>` + `<b>` + 
-                  `Description: ` + `</b>` + e.features[0].properties.Description + `</h4>` + `<h4>` + `<b>` +
-                  `Photos : ` + `</b>` + e.features[0].properties.Photos + `</h4>`+ `<h4>` + `<b>`;
+                var description = `<h3>` + address + `</h3>` + `<h4>` + `<b>`
+                  if (date) {
+                    description += `Date: ` + `</b>` + date + `</h4>` + `<h4>` + `<b>`
+                  }
+                  if (frequency) {
+                    description += `Has this occured more than once? ` + `</b>` + frequency + `</h4>` + `<h4>` + `<b>` 
+                  }
+                  if (describe) {
+                    description += `Description: ` + `</b>` + describe + `</h4>`
+                  }
+                      if (photo) {  
+                        description += `
+                          <h4>
+                            <b>Photos:</b>
+                            ${photo}
+                          </h4>
+                          <iframe
+                            src="https://drive.google.com/file/d/${new URLSearchParams(photo.split('?')[1]).get('id')}/preview"
+                            allow="autoplay"
+                            style="width: 100%; border: none;"
+                          />
+                        `
+                      }
 
-              // Ensure that if the map is zoomed out such that multiple
-              // copies of the feature are visible, the popup appears
-              // over the copy being pointed to.
-              while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
-                coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
-              }
+                // Ensure that if the map is zoomed out such that multiple
+                // copies of the feature are visible, the popup appears
+                // over the copy being pointed to.
+                while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+                  coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+                }
 
-              //add Popup to map
+                //add Popup to map
 
-              new mapboxgl.Popup()
-                .setLngLat(coordinates)
-                .setHTML(description)
-                .addTo(map);
-            });
+                new mapboxgl.Popup({anchor: 'top'})
+                  .setLngLat(coordinates)
+                  .setHTML(description)
+                  .addTo(map);
+              });
+            }
+
 
             // Change the cursor to a pointer when the mouse is over the places layer.
             map.on('mouseenter', 'csvData', function () {
