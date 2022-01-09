@@ -36,7 +36,7 @@
     .mapboxgl-popup-content {
       font: 400 15px/22px 'Source Sans Pro', 'Helvetica Neue', Sans-serif;
       padding: 0;
-      width: 300px;
+      width: 400px;
     }
 
     .mapboxgl-popup-content-wrapper {
@@ -167,13 +167,18 @@
                 // For example: e.features[0].properties.Name is retrieving information from the field Name in the original CSV.
                 const photo = e.features[0].properties['Please upload any photos or videos you\'d like to share from the event.']
                 const address = e.features[0].properties['Please write the address in the form " XXX Street, Pacifica CA 940XX" ']
-                const gpsLat = e.features[0].properties['Latitude']
-                const gpsLon = e.features[0].properties['Longitude']
+                const gpsLat = Math.round(e.features[0].geometry.coordinates[1]*10000)/10000
+                const gpsLon = Math.round(e.features[0].geometry.coordinates[0]*10000)/10000
                 const date = e.features[0].properties['When did this event occur? (Approximate dates or years are okay)']
                 const frequency = e.features[0].properties['If yes, approximately how many times?']
                 const describe = e.features[0].properties['Please describe what happened.']
-
-                var description = `<h3>` + address + `</h3>` + `<h4>` + `<b>`
+                
+                var description = `<h3>`
+                  if (address) {
+                    description += address + `</h3>` + `<h4>` + `<b>`
+                  } else {
+                    description += gpsLat + ' N, ' + gpsLon + ' E' + `</h3>` + `<h4>` + `<b>`
+                  }
                   if (date) {
                     description += `Date: ` + `</b>` + date + `</h4>` + `<h4>` + `<b>`
                   }
