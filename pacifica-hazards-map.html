@@ -57,7 +57,7 @@
     .mapboxgl-popup-content h4 {
       margin: 0;
       display: block;
-      padding: 10px 3px 10px 10px;
+      padding: 20px 3px 20px 10px;
       font-weight: 400;
     }
 
@@ -95,7 +95,7 @@
     mapboxgl.accessToken = 'pk.eyJ1IjoiZWJvbGVzIiwiYSI6ImNraDFtMG53cDAzMzYyem85Zm94cGJpMnYifQ.pFxheeS-98_kb68nMfZagQ'; //Mapbox token 
     var map = new mapboxgl.Map({
       container: 'map', // container id
-      style: 'mapbox://styles/mapbox/outdoors-v11', // YOUR TURN: choose a style: https://docs.mapbox.com/api/maps/#styles
+      style: 'mapbox://styles/mapbox/light-v10', // YOUR TURN: choose a style: https://docs.mapbox.com/api/maps/#styles
       center: [-122.4869,37.6138], // starting position [lng, lat]
       zoom: 11,// starting zoom
       transformRequest: transformRequest
@@ -129,7 +129,7 @@
                 'data': data
               },
               'paint': {
-                'circle-radius': 15,
+                'circle-radius': 5,
                 'circle-color': "purple"
               }
             });
@@ -145,10 +145,10 @@
               // For example: e.features[0].properties.Name is retrieving information from the field Name in the original CSV.
               var description = `<h3>` + e.features[0].properties.Name + `</h3>` + `<h4>` + `<b>` + 
                   `Address: ` + `</b>` + e.features[0].properties.Address + `</h4>` + `<h4>` + `<b>` + 
-                  `Date: ` + `</b>` + e.features[0].properties.Date + `</h4>` +
-                  `Has this occured more than once? ` + `</b>` + e.features[0].properties.Frequency + `</h4>` + 
-                  `Description: ` + `</b>` + e.features[0].properties.Description + `</h4>` +
-                  `Photos : ` + `</b>` + e.features[0].properties.Photos + `</h4>`;
+                  `Date: ` + `</b>` + e.features[0].properties.Date + `</h4>` + `<h4>` + `<b>` +
+                  `Has this occured more than once? ` + `</b>` + e.features[0].properties.Frequency + `</h4>` + `<h4>` + `<b>` + 
+                  `Description: ` + `</b>` + e.features[0].properties.Description + `</h4>` + `<h4>` + `<b>` +
+                  `Photos : ` + `</b>` + e.features[0].properties.Photos + `</h4>`+ `<h4>` + `<b>`;
 
               // Ensure that if the map is zoomed out such that multiple
               // copies of the feature are visible, the popup appears
