@@ -202,7 +202,7 @@
                         description += `
                           <h4>
                             <b>Photos:</b>
-                            ${photo}
+                            ${escape(photo)}
                           </h4>
                           <iframe
                             src="https://drive.google.com/file/d/${new URLSearchParams(photo.split('?')[1]).get('id')}/preview"
@@ -249,6 +249,25 @@
     });
 
 
+
+
+    // === Copied from Lodash ===
+    // Source and license available here: https://github.com/lodash/lodash
+    const reUnescapedHtml = /[&<>"']/g;
+    const reHasUnescapedHtml = RegExp(reUnescapedHtml.source);
+    const escapeHtmlChar = c => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    })[c];
+    function escape(string) {
+      string = String(string);
+      return (string && reHasUnescapedHtml.test(string))
+        ? string.replace(reUnescapedHtml, escapeHtmlChar)
+        : string;
+    }
 
 
   </script>
