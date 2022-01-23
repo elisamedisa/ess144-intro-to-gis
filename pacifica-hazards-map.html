@@ -83,13 +83,39 @@
   <div id='map'></div>
   <script>
 
+
+
+
+    var knownHazardNames = {
+      cliff: 'Coastal cliff failure',
+      fire: 'Fire',
+      erosion: 'Erosion',
+      wave: 'Coastal flooding (from the ocean)',
+      landslide: 'Landslide',
+      flood: 'Inland flooding (from storm events)',
+    }
+
+    function knownHazardFilterBuilder(hazardName) {
+      return feature => feature.properties['What type of hazard was this?'] == hazardName
+    }
+
+    function unknownHazardFilter(feature) {
+      return !Object.values(knownHazardNames).reduce(
+        (anyMatch, hazardName) => anyMatch || knownHazardFilterBuilder(hazardName)(feature), false
+      )
+    }
+
+    window.unknownHazardFilter = unknownHazardFilter
+
     var hazardTypes = [
-      {iconName: 'cliff', iconPath: './hazard-icons/icons8-cliff-100.png', hazardName: 'Coastal cliff failure'},
-      {iconName: 'fire', iconPath: './hazard-icons/icons8-fire-90.png', hazardName: 'Fire'},
-      {iconName: 'erosion', iconPath: './hazard-icons/icons8-landslide-100.png', hazardName: 'Erosion'},
-      {iconName: 'wave', iconPath: './hazard-icons/icons8-ocean-wave-100.png', hazardName: 'Coastal flooding (from the ocean)'},
-      {iconName: 'landslide', iconPath: './hazard-icons/icons8-avalanche-100.png', hazardName: 'Landslide'},
-      {iconName: 'flood', iconPath: './hazard-icons/icons8-water-100.png', hazardName: 'Inland flooding (from storm events)'}
+      {iconName: 'cliff', iconPath: './hazard-icons/icons8-cliff-100.png', filter: knownHazardFilterBuilder(knownHazardNames.cliff)},
+      {iconName: 'fire', iconPath: './hazard-icons/icons8-fire-90.png', filter: knownHazardFilterBuilder(knownHazardNames.fire)},
+      {iconName: 'erosion', iconPath: './hazard-icons/icons8-landslide-100.png', filter: knownHazardFilterBuilder(knownHazardNames.erosion)},
+      {iconName: 'wave', iconPath: './hazard-icons/icons8-ocean-wave-100.png', filter: knownHazardFilterBuilder(knownHazardNames.wave)},
+      {iconName: 'landslide', iconPath: './hazard-icons/icons8-avalanche-100.png', filter: knownHazardFilterBuilder(knownHazardNames.landslide)},
+      {iconName: 'flood', iconPath: './hazard-icons/icons8-water-100.png', filter: knownHazardFilterBuilder(knownHazardNames.flood)},
+      // {iconName: 'other', iconPath: './hazard-icons/icons8-hazard-warning-flasher-100.png', filter: unknownHazardFilter},
+      // {iconName: 'other', iconPath: './hazard-icons/icons8-hazard-warning-flasher-100.png', filter: knownHazardFilterBuilder(knownHazardNames.flood)},
     ]
 
     var transformRequest = (url, resourceType) => {
@@ -112,6 +138,27 @@
       zoom: 11,// starting zoom
       transformRequest: transformRequest
     });
+
+    // add city boundaries
+    map.on('load', function () {
+  
+      map.addSource('pacifica', {
+        type: 'vector',
+        url: './PacificaBoundaries/PacificaBoundaries.shp'
+      }
+      );
+
+      map.addLayer({
+        'id': 'outline',
+        'type': 'line',
+        'source': 'pacifica',
+        'layout': {},
+        'paint': {
+          'line-color': '#000',
+          'line-width': 3
+      }
+      });
+    })
 
     // add icons
     for (const {iconName, iconPath} of hazardTypes) {
