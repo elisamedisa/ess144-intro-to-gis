@@ -78,55 +78,51 @@
 
 <body>
 
-  <div id='map'></div>
-  <script>
-    const featuresURL = "https://script.google.com/macros/s/AKfycbymLKRVjqKUNiogpkw1YLAD82RqLA_rNaTNd2HPlYdeRxu9BLBbBlCcbGa69SjvMKBvbg/exec"; //edit this?
-    
-    //AKfycbw7yDrm3JF73_FFOvNmD8LeC9l5EGJXPq9rYOxsaKgp8Ii7NxFKdlfR_q5f-fLWSZzAbg previous one
-
-    // This section creates icons for each of the hazard types
-    const knownHazardTypes = {
-      coastal: 'Coastal flooding (from the ocean or bay)',
-      inland: 'Inland flooding (from rain)'
-    }
-
-    function knownHazardFilterBuilder(hazardType) {
-      return feature => feature.properties.type == hazardType
-    }
-
-    function unknownHazardFilter(feature) {
-      let known = false;
-      for (const hazardType of Object.values(knownHazardTypes)) {
-        console.log(hazardType)
-        known = known || feature.properties.type == hazardType;
+    <div id='map'></div>
+    <script>
+      const featuresURL = "https://script.google.com/macros/s/AKfycbw7yDrm3JF73_FFOvNmD8LeC9l5EGJXPq9rYOxsaKgp8Ii7NxFKdlfR_q5f-fLWSZzAbg/exec";
+  
+      const knownHazardTypes = {
+        coastal: 'Coastal flooding (from the ocean)',
+        inland: 'Inland flooding (from storm events)'
       }
-      return !known;
-    }
-
-    window.unknownHazardFilter = unknownHazardFilter
-
-    var hazardLayers = [
-      //{iconName: 'cliff', iconPath: './hazard-icons/icons8-cliff-100.png', filter: knownHazardFilterBuilder(knownHazardTypes.cliff)},
-      //{iconName: 'fire', iconPath: './hazard-icons/icons8-fire-90.png', filter: knownHazardFilterBuilder(knownHazardTypes.fire)},
-      //{iconName: 'erosion', iconPath: './hazard-icons/icons8-landslide-100.png', filter: knownHazardFilterBuilder(knownHazardTypes.erosion)},
-      {iconName: 'wave', iconPath: './hazard-icons/icons8-ocean-wave-100.png', filter: knownHazardFilterBuilder(knownHazardTypes.coastal)},
-      //{iconName: 'landslide', iconPath: './hazard-icons/icons8-avalanche-100.png', filter: knownHazardFilterBuilder(knownHazardTypes.landslide)},
-      {iconName: 'flood', iconPath: './hazard-icons/icons8-water-100.png', filter: knownHazardFilterBuilder(knownHazardTypes.inland)},
-      //{iconName: 'sinkhole', iconPath: './hazard-icons/icons8-hole-100.png', filter: knownHazardFilterBuilder(knownHazardTypes.sinkhole)},
-      //{iconName: 'other', iconPath: './hazard-icons/icons8-hazard-warning-flasher-100.png', filter: unknownHazardFilter},
-    ]
-
-
-    var transformRequest = (url, resourceType) => {
-      var isMapboxRequest =
-        url.slice(8, 22) === "api.mapbox.com" ||
-        url.slice(10, 26) === "tiles.mapbox.com";
-      return {
-        url: isMapboxRequest
-          ? url.replace("?", "?pluginName=sheetMapper&")
-          : url
+  
+      function knownHazardFilterBuilder(hazardType) {
+        return feature => feature.properties.type == hazardType
+      }
+  
+      function unknownHazardFilter(feature) {
+        let known = false;
+        for (const hazardType of Object.values(knownHazardTypes)) {
+          console.log(hazardType)
+          known = known || feature.properties.type == hazardType;
+        }
+        return !known;
+      }
+  
+      window.unknownHazardFilter = unknownHazardFilter
+  
+      var hazardLayers = [
+        //{iconName: 'cliff', iconPath: './hazard-icons/icons8-cliff-100.png', filter: knownHazardFilterBuilder(knownHazardTypes.cliff)},
+        //{iconName: 'fire', iconPath: './hazard-icons/icons8-fire-90.png', filter: knownHazardFilterBuilder(knownHazardTypes.fire)},
+        //{iconName: 'erosion', iconPath: './hazard-icons/icons8-landslide-100.png', filter: knownHazardFilterBuilder(knownHazardTypes.erosion)},
+        {iconName: 'wave', iconPath: './hazard-icons/icons8-ocean-wave-100.png', filter: knownHazardFilterBuilder(knownHazardTypes.coastal)},
+        //{iconName: 'landslide', iconPath: './hazard-icons/icons8-avalanche-100.png', filter: knownHazardFilterBuilder(knownHazardTypes.landslide)},
+        {iconName: 'flood', iconPath: './hazard-icons/icons8-water-100.png', filter: knownHazardFilterBuilder(knownHazardTypes.inland)},
+        //{iconName: 'sinkhole', iconPath: './hazard-icons/icons8-hole-100.png', filter: knownHazardFilterBuilder(knownHazardTypes.sinkhole)},
+        //{iconName: 'other', iconPath: './hazard-icons/icons8-hazard-warning-flasher-100.png', filter: unknownHazardFilter},
+      ]
+  
+      var transformRequest = (url, resourceType) => {
+        var isMapboxRequest =
+          url.slice(8, 22) === "api.mapbox.com" ||
+          url.slice(10, 26) === "tiles.mapbox.com";
+        return {
+          url: isMapboxRequest
+            ? url.replace("?", "?pluginName=sheetMapper&")
+            : url
+        };
       };
-    };
 
     //YOUR TURN: add your Mapbox token
     mapboxgl.accessToken = 'pk.eyJ1IjoiZWJvbGVzIiwiYSI6ImNraDFtMG53cDAzMzYyem85Zm94cGJpMnYifQ.pFxheeS-98_kb68nMfZagQ'; //Mapbox token 
@@ -161,14 +157,15 @@
 
     // add icons
     for (const {iconName, iconPath} of hazardLayers) {
-      map.loadImage(iconPath, (error, image) => {
+        console.log(iconName)
+        map.loadImage(iconPath, (error, image) => {
         if (error) throw error
-        map.addImage(iconName, image)
+            map.addImage(iconName, image)
       })
     }
 
     //Add the the layer to the map
-    map.addLayer({
+    /* map.addLayer({
               'id': 'csvData',
               'type': 'circle',
               'source': {
@@ -180,9 +177,11 @@
                 'circle-color': "purple"
               }
             });
+    */
 
     // Fetch features and wait for map load concurrently
     const features_promise = (async () => JSON.parse(await (await fetch(featuresURL)).text()))();
+    
     map.on('load', async () => {
       console.log("Fetching features...")
       const features = await features_promise;
