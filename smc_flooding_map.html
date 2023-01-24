@@ -80,11 +80,12 @@
 
     <div id='map'></div>
     <script>
-      const featuresURL = "https://script.google.com/macros/s/AKfycbw7yDrm3JF73_FFOvNmD8LeC9l5EGJXPq9rYOxsaKgp8Ii7NxFKdlfR_q5f-fLWSZzAbg/exec";
-  
+      const featuresURL = "https://script.google.com/macros/s/AKfycbwAo_U_i2tVrb16UjCRx7YULWqatUtE6FSFwf2Ixi3B5mgxuULF9_e7Mx-mWTc4dqPdEw/exec";
+      // AKfycbw7yDrm3JF73_FFOvNmD8LeC9l5EGJXPq9rYOxsaKgp8Ii7NxFKdlfR_q5f-fLWSZzAbg
+
       const knownHazardTypes = {
-        coastal: 'Coastal flooding (from the ocean)',
-        inland: 'Inland flooding (from storm events)'
+        coastal: 'Coastal flooding (from the ocean or bay)',
+        inland: 'Inland flooding (from rain)'
       }
   
       function knownHazardFilterBuilder(hazardType) {
@@ -130,7 +131,7 @@
       container: 'map', // container id
       style: 'mapbox://styles/mapbox/outdoors-v12', // choose a style: https://docs.mapbox.com/api/maps/#styles
       center: [-122.350273, 37.519671], // starting position [lng, lat]
-      zoom: 10,// starting zoom
+      zoom: 9, // starting zoom
       transformRequest: transformRequest
     });
 
@@ -157,38 +158,42 @@
 
     // add icons
     for (const {iconName, iconPath} of hazardLayers) {
-        console.log(iconName)
         map.loadImage(iconPath, (error, image) => {
         if (error) throw error
             map.addImage(iconName, image)
       })
     }
 
-    //Add the the layer to the map
-    /* map.addLayer({
-              'id': 'csvData',
-              'type': 'circle',
-              'source': {
-                'type': 'geojson',
-                'data': data
-              },
-              'paint': {
-                'circle-radius': 5,
-                'circle-color': "purple"
-              }
-            });
-    */
-
-    // Fetch features and wait for map load concurrently
+    // Fetch features and wait for map to load concurrently
     const features_promise = (async () => JSON.parse(await (await fetch(featuresURL)).text()))();
     
+    //Add the the layer to the map
     map.on('load', async () => {
       console.log("Fetching features...")
       const features = await features_promise;
 
       console.log("Adding map layers...")
       for (const {iconName, hazardName, filter: layerFilter} of hazardLayers) {
+
+          map.addLayer({
+            'id': iconName,
+            'type': 'circle',
+            'paint': {
+                'circle-radius': 5,
+                'circle-color': "purple"
+              },
+            'source': {
+              'type': 'geojson',
+              'data': {
+                type: "FeatureCollection",
+                features: features//.filter(layerFilter)
+            } 
+          } 
+          })
+
+
         //Add the the layer to the map
+        /*
         map.addLayer({
           'id': iconName,
           'type': 'symbol',
@@ -206,14 +211,16 @@
             }
           }
         })
-
+        */
         // When a click event occurs on a feature in the csvData layer, open a popup at the
         // location of the feature, with description HTML from its properties.
         map.on('click', iconName, function (e) {
 
           const feature = e.features[0];
           const coordinates = feature.geometry.coordinates;
-          const { type, description: date, time, photos, comments} = feature.properties;
+          const {date, time, photos, comments, type} = feature.properties;
+
+          console.log(date, time, photos, comments, type)
 
           // var coordinates = feature.geometry.coordinates.slice();
           //set popup text
@@ -237,7 +244,7 @@
         //   description += escape(coordinates[1]) + ' N, ' + escape(coordinates[0]) + ' E' + `</h4>` + `<h4>`
         //  }
          
-          description += escape(coordinates[1]) + ' N, ' + escape(coordinates[0]) + ' E' + `</h4>` + `<h4>`
+          description += `<b>` + `Location: ` + `</b>` + escape(Math.round(coordinates[1]*10000)/10000) + ' N, ' + escape(Math.round(coordinates[0]*10000)/10000) + ' E' + `</h4>` + `<h4>`
             
           if (date) {
             description += `<b>` + `Date: ` + `</b>` + escape(date) + `</h4>` + `<h4>`
@@ -246,7 +253,7 @@
             description += `<b>` + `Time: ` + `</b>` + escape(time) + `</h4>` + `<h4>`
           }
           if (comments) {
-            description += `<b>` + `Description: ` + `</b>` + escape(featureDescription) + `</h4>` + `<h4>`
+            description += `<b>` + `Description: ` + `</b>` + escape(comments) + `</h4>` + `<h4>`
           }
           if (photos) {
             for (const photo of photos.split(', ')) {
