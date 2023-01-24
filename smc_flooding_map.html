@@ -12,6 +12,7 @@
     body {
       margin: 0;
       padding: 0;
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     }
 
     #map {
@@ -20,6 +21,14 @@
       bottom: 0;
       width: 100%;
     }
+
+    #console {
+      position: absolute;
+      margin: 10px;
+      width: 300px;
+      background-color: white;
+      padding: 10px 20px;
+}
 
     /* Popup styling */
 
@@ -79,6 +88,10 @@
 <body>
 
     <div id='map'></div>
+    <div id='console'>
+      <h1>San Mateo County Flood Reports</h1>
+      <p> OneShoreline is gathering information about flooding events and related impacts around San Mateo County. Submit information to be included on the map at <a href='https://docs.google.com/forms/d/e/1FAIpQLSeGRAMC1NT5WUp11pUzlex9xeUwEf0PKqiUhGk3oeqRHptizQ/viewform'>this link</a>.</p>
+    </div>
     <script>
       const featuresURL = "https://script.google.com/macros/s/AKfycbwAo_U_i2tVrb16UjCRx7YULWqatUtE6FSFwf2Ixi3B5mgxuULF9_e7Mx-mWTc4dqPdEw/exec";
       // AKfycbw7yDrm3JF73_FFOvNmD8LeC9l5EGJXPq9rYOxsaKgp8Ii7NxFKdlfR_q5f-fLWSZzAbg
