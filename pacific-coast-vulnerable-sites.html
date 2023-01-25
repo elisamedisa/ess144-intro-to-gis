@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset='utf-8' />
+  <title></title>
+  <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+  <script src='https://api.mapbox.com/mapbox-gl-js/v2.0.1/mapbox-gl.js'></script>
+  <link href='https://api.mapbox.com/mapbox-gl-js/v2.0.1/mapbox-gl.css' rel='stylesheet' />
+  <script src='https://npmcdn.com/@turf/turf/turf.min.js'></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+
+    #map {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 100%;
+    }
+
+    #console {
+      position: absolute;
+      margin: 10px;
+      width: 300px;
+      background-color: white;
+      padding: 10px 20px;
+}
+
+    /* Popup styling */
+
+    .mapboxgl-popup {
+      padding-bottom: 5px;
+    }
+
+    .mapboxgl-popup-close-button {
+      display: none;
+    }
+
+    .mapboxgl-popup-content {
+      font: 400 15px/22px 'Source Sans Pro', 'Helvetica Neue', Sans-serif;
+      padding: 0;
+      width: 400px;
+      max-height: 400px;
+      overflow-y: scroll;
+    }
+
+    .mapboxgl-popup-content-wrapper {
+      padding: 1%;
+    }
+
+    .mapboxgl-popup-content h3 {
+      background: rgb(61, 59, 59);
+      text-align: center;
+      color: #fff;
+      margin: 0;
+      display: block;
+      padding: 15px;
+      font-weight: 700;
+      margin-top: -5px;
+    }
+
+    .mapboxgl-popup-content h4 {
+      margin: 0;
+      display: block;
+      padding: 10px 10px 10px 10px;
+      font-weight: 400;
+      overflow-wrap: break-word;
+    }
+
+    .mapboxgl-container {
+      cursor: pointer;
+    }
+
+    .mapboxgl-popup-anchor-top>.mapboxgl-popup-content {
+      margin-top: 3px;
+    }
+
+    .mapboxgl-popup-anchor-top>.mapboxgl-popup-tip {
+      border-bottom-color: rgb(61, 59, 59);
+    }
+  </style>
+</head>
+
+<body>
+
+    <div id='map'></div>
+    <div id='console'>
+      <h1>Vulnerable sites on the SMC Pacific Coast</h1>
+    </div>
+    <script>
+      const featuresURL = "https://script.google.com/macros/s/AKfycbzv4Ci1Uh-vZjicJ-hYD51ePcr7SVXpq6kL2kJkZsxyY4XPv87TARN7DtRGM-aa5ErN/exec";
+      // AKfycbw7yDrm3JF73_FFOvNmD8LeC9l5EGJXPq9rYOxsaKgp8Ii7NxFKdlfR_q5f-fLWSZzAbg
+
+      const knownHazardTypes = {
+        erosion: 'Erosion',
+        wave: 'Waves',
+        flood: 'Flood'
+      }
+  
+      function knownHazardFilterBuilder(hazardType) {
+        return feature => feature.properties.type == hazardType
+      }
+  
+      function unknownHazardFilter(feature) {
+        let known = false;
+        for (const hazardType of Object.values(knownHazardTypes)) {
+          console.log(hazardType)
+          known = known || feature.properties.type == hazardType;
+        }
+        return !known;
+      }
+  
+      window.unknownHazardFilter = unknownHazardFilter
+  
+      var hazardLayers = [
+        //{iconName: 'cliff', iconPath: './hazard-icons/icons8-cliff-100.png', filter: knownHazardFilterBuilder(knownHazardTypes.cliff)},
+        //{iconName: 'fire', iconPath: './hazard-icons/icons8-fire-90.png', filter: knownHazardFilterBuilder(knownHazardTypes.fire)},
+        {iconName: 'erosion', iconPath: './hazard-icons/landslide.png', filter: knownHazardFilterBuilder(knownHazardTypes.erosion)},
+        {iconName: 'wave', iconPath: './hazard-icons/wave.png', filter: knownHazardFilterBuilder(knownHazardTypes.wave)},
+        //{iconName: 'landslide', iconPath: './hazard-icons/icons8-avalanche-100.png', filter: knownHazardFilterBuilder(knownHazardTypes.landslide)},
+        {iconName: 'flood', iconPath: './hazard-icons/water-drop.png', filter: knownHazardFilterBuilder(knownHazardTypes.flood)},
+        //{iconName: 'sinkhole', iconPath: './hazard-icons/icons8-hole-100.png', filter: knownHazardFilterBuilder(knownHazardTypes.sinkhole)},
+        //{iconName: 'other', iconPath: './hazard-icons/icons8-hazard-warning-flasher-100.png', filter: unknownHazardFilter},
+      ]
+  
+      var transformRequest = (url, resourceType) => {
+        var isMapboxRequest =
+          url.slice(8, 22) === "api.mapbox.com" ||
+          url.slice(10, 26) === "tiles.mapbox.com";
+        return {
+          url: isMapboxRequest
+            ? url.replace("?", "?pluginName=sheetMapper&")
+            : url
+        };
+      };
+
+    //YOUR TURN: add your Mapbox token
+    mapboxgl.accessToken = 'pk.eyJ1IjoiZWJvbGVzIiwiYSI6ImNraDFtMG53cDAzMzYyem85Zm94cGJpMnYifQ.pFxheeS-98_kb68nMfZagQ'; //Mapbox token 
+    var map = new mapboxgl.Map({
+      container: 'map', // container id
+      style: 'mapbox://styles/mapbox/satellite-v9', // choose a style: https://docs.mapbox.com/api/maps/#styles
+      center: [-122.350273, 37.519671], // starting position [lng, lat]
+      zoom: 9, // starting zoom
+      transformRequest: transformRequest
+    });
+
+    // // add city boundaries
+    // map.on('load', function () {
+
+    //   map.addSource('pacifica', {
+    //     type: 'vector',
+    //     url: './PacificaBoundaries/PacificaBoundaries.shp'
+    //   }
+    //   );
+
+    //   map.addLayer({
+    //     'id': 'outline',
+    //     'type': 'line',
+    //     'source': 'pacifica',
+    //     'layout': {},
+    //     'paint': {
+    //       'line-color': '#000',
+    //       'line-width': 3
+    //   }
+    //   });
+    // })
+
+    // add icons
+    for (const {iconName, iconPath} of hazardLayers) {
+        map.loadImage(iconPath, (error, image) => {
+        if (error) throw error
+            map.addImage(iconName, image)
+      })
+    }
+
+    // Fetch features and wait for map to load concurrently
+    const features_promise = (async () => JSON.parse(await (await fetch(featuresURL)).text()))();
+    
+    //Add the the layer to the map
+    map.on('load', async () => {
+      console.log("Fetching features...")
+      const features = await features_promise;
+
+      console.log("Adding map layers...")
+      for (const {iconName, hazardName, filter: layerFilter} of hazardLayers) {
+/*
+          map.addLayer({
+            'id': iconName,
+            'type': 'circle',
+            'paint': {
+                'circle-radius': 5,
+                'circle-color': "purple"
+              },
+            'source': {
+              'type': 'geojson',
+              'data': {
+                type: "FeatureCollection",
+                features: features//.filter(layerFilter)
+            } 
+          } 
+          })
+*/
+
+        //Add the the layer to the map
+
+        map.addLayer({
+          'id': iconName,
+          'type': 'symbol',
+          'layout': {
+            'icon-image': iconName,
+            'icon-size': 0.35,
+            'icon-anchor': 'bottom',
+            'icon-allow-overlap': true
+          },
+          'source': {
+            'type': 'geojson',
+            'data': {
+              type: "FeatureCollection",
+              features: features.filter(layerFilter)
+            }
+          }
+        })
+
+        // When a click event occurs on a feature in the csvData layer, open a popup at the
+        // location of the feature, with description HTML from its properties.
+        map.on('click', iconName, function (e) {
+
+          const feature = e.features[0];
+          const coordinates = feature.geometry.coordinates;
+          const {name, region, type, history, projects, current_status, lead_agency, link, page} = feature.properties;
+
+          // var coordinates = feature.geometry.coordinates.slice();
+          //set popup text
+          //You can adjust the values of the popup to match the headers of your CSV.
+          // For example: e.features[0].properties.Name is retrieving information from the field Name in the original CSV.
+          // const address = e.features[0].properties['Please write the address in the form " XXX Street, Pacifica CA 940XX" ']
+          // const gpsLat = Math.round(e.features[0].geometry.coordinates[1] * 10000) / 10000
+          // const gpsLon = Math.round(e.features[0].geometry.coordinates[0] * 10000) / 10000
+          // const date = e.features[0].properties['When did this event occur? (Approximate dates or years are okay)']
+          // const frequency = e.features[0].properties['If yes, approximately how many times?']
+          // const describe = e.features[0].properties['Please describe what happened.']
+          // const person = e.features[0].properties['What is your name? (optional)']
+          // const cityWork = e.features[0].properties['Did the city undertake any work or repairs after the event? If so, please describe.']
+          // const legal = e.features[0].properties['Were there any legal challenges or financial settlements that resulted from this event? ']
+          // const photos = e.features[0].properties['Please upload any photos or videos you\'d like to share from the event.']
+
+          var description = `<h3>` + escape(region) + `: `+ escape(name) + `</h3>` + `<h4>`
+        // if (address) {
+        //   description += `<b>` + 'Location: ' + `</b>` + escape(address) + `</h4>` + `<h4>`
+        //  } else {
+        //   description += escape(coordinates[1]) + ' N, ' + escape(coordinates[0]) + ' E' + `</h4>` + `<h4>`
+        //  }
+         
+        //  description += `<b>` + `Location: ` + `</b>` + escape(Math.round(coordinates[1]*10000)/10000) + ' N, ' + escape(Math.round(coordinates[0]*10000)/10000) + ' E' + `</h4>` + `<h4>`
+            
+          if (history) {
+            description += `<b>` + `Site history: ` + `</b>` + escape(history) + `</h4>` + `<h4>`
+          }
+          if (projects) {
+            description += `<b>` + `Project history: ` + `</b>` + escape(projects) + `</h4>` + `<h4>`
+          }
+          if (current_status) {
+            description += `<b>` + `Current status: ` + `</b>` + escape(current_status) + `</h4>` + `<h4>`
+          }
+          if (lead_agency) {
+            description += `<b>` + `Lead agency: ` + `</b>` + escape(lead_agency) + `</h4>` + `<h4>`
+          }
+          if (link) {
+            description += `<b>` + `More information: ` + `</b>` + escape(link) + `</h4>` + `<h4>`
+          }
+          if (page) {
+            description += `<b>` + `Page: ` + `</b>` + escape(page) + `</h4>` + `<h4>`
+          }
+
+          // Ensure that if the map is zoomed out such that multiple
+          // copies of the feature are visible, the popup appears
+          // over the copy being pointed to.
+          while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+            coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+          }
+
+          //add Popup to map
+
+          new mapboxgl.Popup({anchor: 'top'})
+            .setLngLat(coordinates)
+            .setHTML(description)
+            .addTo(map);
+        });
+      }
+
+
+      // Change the cursor to a pointer when the mouse is over the places layer.
+      map.on('mouseenter', 'csvData', function () {
+        map.getCanvas().style.cursor = 'pointer';
+      });
+
+      // Change it back to a pointer when it leaves.
+      map.on('mouseleave', 'places', function () {
+        map.getCanvas().style.cursor = '';
+      });
+
+      var bbox = turf.bbox({ type: "FeatureCollection", features });
+      map.fitBounds(bbox, { padding: 50 });
+    });
+
+
+
+
+    // === Copied from Lodash ===
+    // Source and license available here: https://github.com/lodash/lodash
+    const reUnescapedHtml = /[&<>"']/g;
+    const reHasUnescapedHtml = RegExp(reUnescapedHtml.source);
+    const escapeHtmlChar = c => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    })[c];
+    function escape(string) {
+      string = String(string);
+      return (string && reHasUnescapedHtml.test(string))
+        ? string.replace(reUnescapedHtml, escapeHtmlChar)
+        : string;
+    }
+
+
+  </script>
+
+</body>
+
+</html>
